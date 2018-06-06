@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/adamchurcher/easy-peasy-bot-app#readme",
   "engines": {
-    "node": "5.1.1"
+    "node": "8.11.2"
   },
   "dependencies": {
     "botkit": "0.2.2",
