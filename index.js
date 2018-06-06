@@ -76,6 +76,28 @@ controller.on('rtm_close', function (bot) {
 });
 
 
+// List of people making tea
+let teaMakers = [
+    '@juma',
+    '@adam',
+    '@tahlia',
+    '@ruth',
+    '@lewis',
+    '@rachel'
+];
+
+// Rota'd tea makers
+let rotaTeaMakers = [];
+
+// Next tea maker is first person in the array
+let nextTeaMaker = 0;
+
+let nextMakerResponses = [
+    'The next person to make a tea is {name}!',
+    'It looks like {name}\'s turn next!',
+    '{name}! You\'re up!',
+]
+
 /**
  * Core bot logic goes here!
  */
@@ -89,6 +111,109 @@ controller.hears('hello', 'direct_message', function (bot, message) {
     bot.reply(message, 'Hello!');
 });
 
+controller.hears(
+    ['hello', 'hi', 'greetings', 'hey'],
+    ['direct_mention', 'mention', 'direct_message'],
+    function(bot,message) {
+        bot.reply(message,'Hello Slackers!');
+    }
+);
+
+controller.hears(
+    ['generate', 'rota', 'new'],
+    ['direct_mention', 'mention', 'direct_message'],
+    function(bot, message) {
+
+        /**
+        * Creates a function to shuffle the array randomly
+        */
+        function shuffleMakers() {
+
+            // Defines input as the teaMakers array
+            const input = teaMakers;
+
+            // Loop starts at the end of the array and works backwards
+            for (let i = input.length - 1; i >= 0; i--) {
+
+                // Chooses a random number between the start of
+                // the array and the current loop position
+                let randomIndex = Math.floor(Math.random()*(i+1));
+
+                // Assigns itemAtIndex the value of
+                // the chosen index
+                let itemAtIndex = input[randomIndex];
+
+                // Replaces the chosen index value with the
+                // current index value in the loop
+                input[randomIndex] = input[i];
+
+                // Replaces the current index value in the loop
+                // with the random index value we chose
+                input[i] = itemAtIndex;
+            }
+
+            // Returns the randomised array
+            return input;
+        }
+
+        // Assigns the shuffleMakers function to rota
+        rotaTeaMakers = shuffleMakers();
+
+        nextTeaMaker = 0;
+
+        let msg = {
+            'link_names': 1,
+            'parse': 'full',
+            'attachments': [{
+                'pretext': 'Okay, gang! Let\'s get this kettle on the road :raised_hands:\n Today\'s tea rota is...\n\n',
+                'color': "#36a64f",
+                'text': rotaTeaMakers.join("\n"),
+            }]
+        };
+
+        bot.reply({
+            channel: message.channel
+        }, msg, () => {
+
+            msg = {
+                'link_names': 1,
+                'parse': 'full',
+                'text': '\n\n You\'re up first, ' + rotaTeaMakers[0] + '!',
+                'attachments': []
+            };
+
+            bot.reply({
+                channel: message.channel
+            }, msg);
+        });
+    }
+)
+
+controller.hears(
+    ['next', 'want', 'who', 'tea'],
+    ['direct_mention', 'mention', 'direct_message'],
+    function(bot,message) {
+
+        nextTeaMaker++;
+
+        let randomIndex = Math.floor(Math.random() * nextMakerResponses.length);
+
+        const msg = {
+            'link_names': 1,
+            'parse': 'full',
+            'text': nextMakerResponses[randomIndex].replace('{name}', rotaTeaMakers[nextTeaMaker]),
+            'attachments': []
+        };
+
+        bot.reply({
+            channel: message.channel
+        }, msg);
+
+        if (nextTeaMaker >= rotaTeaMakers.length) {
+            nextTeaMaker = 0;
+        }
+    }
+);
 
 /**
  * AN example of what could be:
